@@ -2,7 +2,7 @@ import logging
 import win32com.client
 import pythoncom
 import pywintypes
-from datetime import datetime
+from datetime import datetime, time
 from typing import Optional
 from dataclasses import dataclass
 
@@ -126,8 +126,8 @@ class OutlookClient:
             if start_date and sent_on.date() < start_date:
                 continue
             if end_date:
-                end_day = end_date.replace(hour=23, minute=59, second=59)
-                if sent_on.date() > end_day:
+                end_day = datetime.combine(end_date, time(23, 59, 59))
+                if sent_on > end_day:
                     continue
 
             # 关键词筛选
