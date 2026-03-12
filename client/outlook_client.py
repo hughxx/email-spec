@@ -8,8 +8,10 @@ from dataclasses import dataclass
 
 
 def convert_pywin_datetime(pywin_dt: any) -> datetime:
-    """将 pywintypes.datetime 转换为 Python datetime"""
-    if isinstance(pywin_dt, pywintypes.datetime):
+    """将 pywintypes.DateTime 转换为 Python datetime"""
+    # pywin32 返回的是 pywintypes.DateTime 对象
+    # 它有 year, month, day, hour, minute, second 属性
+    try:
         return datetime(
             pywin_dt.year,
             pywin_dt.month,
@@ -18,7 +20,9 @@ def convert_pywin_datetime(pywin_dt: any) -> datetime:
             pywin_dt.minute,
             pywin_dt.second
         )
-    return pywin_dt
+    except Exception:
+        # 如果转换失败，尝试直接返回
+        return pywin_dt
 
 logging.basicConfig(
     level=logging.INFO,
