@@ -1,9 +1,24 @@
 import logging
 import win32com.client
 import pythoncom
+import pywintypes
 from datetime import datetime
 from typing import Optional
 from dataclasses import dataclass
+
+
+def convert_pywin_datetime(pywin_dt: any) -> datetime:
+    """将 pywintypes.datetime 转换为 Python datetime"""
+    if isinstance(pywin_dt, pywintypes.datetime):
+        return datetime(
+            pywin_dt.year,
+            pywin_dt.month,
+            pywin_dt.day,
+            pywin_dt.hour,
+            pywin_dt.minute,
+            pywin_dt.second
+        )
+    return pywin_dt
 
 logging.basicConfig(
     level=logging.INFO,
@@ -102,12 +117,13 @@ class OutlookClient:
             if item.Class != 43:  # 43 = olMail
                 continue
 
-            # 日期筛选
-            if start_date and item.SentOn < start_date:
+            # 日期筛选 - 转换 pywintypes.datetime 为 Python datetime
+            sent_on = convert_pywin_datetime(item.SentOn)
+            if start_date and sent_on.date() < start_date:
                 continue
             if end_date:
                 end_day = end_date.replace(hour=23, minute=59, second=59)
-                if item.SentOn > end_day:
+                if sent_on.date() > end_day:
                     continue
 
             # 关键词筛选
@@ -124,7 +140,7 @@ class OutlookClient:
                 entry_id=item.EntryID,
                 subject=item.Subject,
                 conversation_topic=topic,
-                sent_on=item.SentOn,
+                sent_on=sent_on,
                 sender=item.SenderName,
                 body=item.Body,
                 html_body=item.HTMLBody,
